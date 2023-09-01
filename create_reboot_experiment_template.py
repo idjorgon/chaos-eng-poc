@@ -1,4 +1,5 @@
 import boto3
+from wait_for_new_instance import get_new_instance
 
 def create_reboot_experiment_template():
     fis_client = boto3.client('fis')
@@ -15,7 +16,7 @@ def create_reboot_experiment_template():
                 'Instances-Target-1': {
                     'resourceType': 'aws:ec2:instance',
                     'resourceArns': [
-                        'arn:aws:ec2:us-east-2:863615190391:instance/i-0992c2f9ea88bcbdb',
+                        'arn:aws:ec2:us-east-2:863615190391:instance/i-0992c2f9ea88bcbdb', # Replace/add new instance arn 
                     ],
                 'selectionMode': 'ALL',
                 }
