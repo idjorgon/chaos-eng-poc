@@ -1,23 +1,23 @@
 import boto3
 import time
 
-def main():
-    account_number = "537168545210"
-    region = "us-east-1"
-    instance_id = "i-0dca6993efd1fa24e"
-    role_arn = "arn:aws:iam::537168545210:role/service-role/AWSFISIAMRole-1693834158129"
+ACCOUNT_NUMBER = "863615190391"
+REGION = "us-east-2"
+INSTANCE_ID = "i-0dea9f7d20ea1bf93"
+ROLE_ARN = f"arn:aws:iam::{ACCOUNT_NUMBER}:role/my-fis-role"
 
+def main():
     # Initialize Boto3 clients
-    ec2_client = boto3.client('ec2', region_name=region)
-    fis_client = boto3.client('fis', region_name=region)
+    ec2_client = boto3.client('ec2', region_name=REGION)
+    fis_client = boto3.client('fis', region_name=REGION)
 
     # Check if EC2 instance is already stopped
-    ec2_response = ec2_client.describe_instances(InstanceIds=[instance_id])
+    ec2_response = ec2_client.describe_instances(InstanceIds=[INSTANCE_ID])
     instance_state = ec2_response['Reservations'][0]['Instances'][0]['State']['Name']
 
     if instance_state == 'stopped':
         print("EC2 instance is stopped. Starting it.")
-        ec2_client.start_instances(InstanceIds=[instance_id])
+        ec2_client.start_instances(InstanceIds=[INSTANCE_ID])
         time.sleep(60)  # Wait for instance to start
 
     # Create FIS experiment template for rebooting EC2 instance
@@ -27,7 +27,7 @@ def main():
             "Instances-Target-1": {
                 "resourceType": "aws:ec2:instance",
                 "resourceArns": [
-                    f"arn:aws:ec2:{region}:{account_number}:instance/{instance_id}"
+                    f"arn:aws:ec2:{REGION}:{ACCOUNT_NUMBER}:instance/{INSTANCE_ID}"
                 ],
                 "selectionMode": "ALL"
             }
@@ -43,10 +43,10 @@ def main():
         stopConditions=[
             {
                 "source": "aws:cloudwatch:alarm",
-                "value": "arn:aws:cloudwatch:us-east-1:537168545210:alarm:EC2-CPU-Alarm"
+                "value": "arn:aws:cloudwatch:us-east-2:863615190391:alarm:EC2-CPU-Alarm"
             }
         ],
-        roleArn=role_arn
+        roleArn=ROLE_ARN
     )
     template_id = response['experimentTemplate']['id']
     print(f"Experiment template created with ID: {template_id}")
@@ -60,7 +60,7 @@ def main():
 
     # Monitor the EC2 instance
     while True:
-        ec2_response = ec2_client.describe_instance_status(InstanceIds=[instance_id])
+        ec2_response = ec2_client.describe_instance_status(InstanceIds=[INSTANCE_ID])
         instance_status = ec2_response['InstanceStatuses'][0]['InstanceState']['Name'] if ec2_response['InstanceStatuses'] else 'stopped'
 
         print(f"EC2 Instance status: {instance_status}")
